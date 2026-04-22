@@ -1,2 +1,2 @@
 # TableTrack
-A smart cafe management application designed to handle billing, table reservations, and order tracking efficiently.
+TableTrack is a web-based restaurant management system designed for efficient billing, table reservations, and order handling, providing a seamless experience for both staff and customers.
