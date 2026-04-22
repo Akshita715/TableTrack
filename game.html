@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aim Software - Pro</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        /* --- Base Styles & Custom Scrollbar --- */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f7fafc;
+            color: #2d3748;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #edf2f7; }
+        ::-webkit-scrollbar-thumb { background: #a0aec0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #718096; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes logo-reveal {
+            0% { transform: scale(0.5) rotate(-15deg); opacity: 0; }
+            60% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes text-fade-in {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .splash-logo { animation: logo-reveal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        .splash-text { animation: text-fade-in 1s ease-out 0.8s forwards; opacity: 0; }
+       
+        .view-content { animation: fadeIn 0.5s ease-in-out; }
+        .modal-content-anim { animation: popIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+
+        /* --- Sidebar & POS Categories --- */
+        .sidebar-link.active {
+            background-color: #c53030;
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(197, 48, 48, 0.3);
+        }
+        .pos-category-link.active {
+            background-color: #c53030;
+            color: white;
+            font-weight: 600;
+        }
+        .pos-category-link { transition: all 0.2s ease-in-out; }
+        .pos-category-link:hover { background-color: #e53e3e; color: white; }
+
+        /* --- New POS Item Card --- */
+        .pos-item-card {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+        }
+        .pos-item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .pos-item-card.disabled {
+            cursor: not-allowed;
+            filter: grayscale(1);
+            background-color: #e2e8f0;
+        }
+        .pos-item-card.disabled:hover { transform: none; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1); }
+        .out-of-stock-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #c53030;
+            border-radius: 0.5rem;
+        }
+
+        /* --- Table View Cards --- */
+        .table-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .table-card:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .table-available { background-color: #48bb78; color: white; }
+        .table-occupied { background-color: #4299e1; color: white; }
+        .table-reserved { background-color: #f6e05e; color: #4a5568; }
+
+        /* --- Staff View Cards --- */
+        .staff-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            animation: slideUp 0.5s ease-out;
+        }
+        .staff-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+
+        /* --- KDS Flash --- */
+        @keyframes kds-new-order-flash {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(245, 101, 101, 0.7); }
+            50% { box-shadow: 0 0 0 0px rgba(245, 101, 101, 0); }
+        }
+        .kds-new-order { animation: kds-new-order-flash 1.5s infinite; }
+    </style>
+</head>
+<body class="h-screen overflow-hidden">
+
+    <div id="splash-screen" class="flex flex-col items-center justify-center h-full bg-gray-800">
+        <div class="text-center text-white">
+            <svg class="splash-logo w-32 h-32 mx-auto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#f56565" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 17L12 22L22 17" stroke="#f56565" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="#f56565" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h1 class="splash-text text-5xl font-bold mt-4 tracking-wider">Aim Software</h1>
+            <p class="splash-text text-lg text-gray-300">Your Business, Perfected.
+               
+            </p>
+        </div>
+    </div>
+
+    <div id="main-app" class="hidden h-screen w-screen bg-gray-100">
+        <div class="flex h-full">
+            <nav class="w-24 lg:w-64 bg-gray-800 text-gray-300 flex flex-col transition-all duration-300">
+                <div class="flex items-center justify-center lg:justify-start lg:pl-6 h-20 border-b border-gray-700">
+                    <svg class="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="hidden lg:inline ml-3 text-xl font-bold text-white">Aim Software</span>
+                </div>
+                <ul id="sidebar-links" class="flex-grow p-3 space-y-2">
+                    <li><a href="#" data-view="dashboard-view" class="sidebar-link active flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors"><i class="ph-fill ph-gauge text-2xl"></i><span class="hidden lg:inline ml-4 font-medium">Dashboard</span></a></li>
+                    <li><a href="#" data-view="new-order-view" class="sidebar-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors"><i class="ph-fill ph-plus-circle text-2xl"></i><span class="hidden lg:inline ml-4 font-medium">New Order</span></a></li>
+                    <li><a href="#" data-view="tables-view" class="sidebar-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors"><i class="ph-fill ph-squares-four text-2xl"></i><span class="hidden lg:inline ml-4 font-medium">Tables</span></a></li>
+                    <li><a href="#" data-view="kds-view" class="sidebar-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors"><i class="ph-fill ph-cooking-pot text-2xl"></i><span class="hidden lg:inline ml-4 font-medium">KDS</span></a></li>
+                    <li><a href="#" data-view="billing-view" class="sidebar-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors"><i class="ph-fill ph-receipt text-2xl"></i><span class="hidden lg:inline ml-4 font-medium">Billing</span></a></li>
+                    <li><a href="#" data-view="inventory-view" class="sidebar-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors"><i class="ph-fill ph-archive text-2xl"></i><span class="hidden lg:inline ml-4 font-medium">Inventory</span></a></li>
+                    <li><a href="#" data-view="staff-view" class="sidebar-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors"><i class="ph-fill ph-users text-2xl"></i><span class="hidden lg:inline ml-4 font-medium">Staff</span></a></li>
+                </ul>
+                <div class="p-4 border-t border-gray-700">
+                    <div class="text-center text-xs text-gray-500">
+                        <p>Developed by Akshita joshi</p>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="flex-1 flex flex-col h-full overflow-hidden">
+                <header class="flex items-center justify-between h-20 bg-white shadow-sm px-6 z-10">
+                    <h2 id="view-title" class="text-3xl font-bold text-gray-700">Dashboard</h2>
+                    <div class="flex items-center gap-4">
+                        <span class="text-gray-600 font-medium" id="current-time"></span>
+                        <div class="w-11 h-11 rounded-full bg-red-500 flex items-center justify-center font-bold text-white text-lg">AS</div>
+                    </div>
+                </header>
+               
+                <div id="content-area" class="flex-1 overflow-y-auto p-6">
+                    <div id="dashboard-view" class="view-content"></div>
+                    <div id="new-order-view" class="view-content hidden h-full"></div>
+                    <div id="tables-view" class="view-content hidden"></div>
+                    <div id="kds-view" class="view-content hidden"></div>
+                    <div id="billing-view" class="view-content hidden"></div>
+                    <div id="inventory-view" class="view-content hidden"></div>
+                    <div id="staff-view" class="view-content hidden"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+   
+    <div id="modal-container">
+        <div id="bill-view-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-30 p-4">
+            <div class="bg-gray-100 rounded-lg shadow-2xl w-full max-w-md modal-content-anim">
+                <div id="bill-modal-content" class="p-8"></div>
+                <footer id="bill-modal-footer" class="px-8 pb-8 flex justify-between items-center gap-4"></footer>
+                <button id="close-bill-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition"><i class="ph-bold ph-x text-3xl"></i></button>
+            </div>
+        </div>
+
+        <div id="customer-details-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 p-4">
+            <form id="customer-details-form" class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 space-y-4 modal-content-anim">
+                <h3 class="text-2xl font-bold mb-4">Customer & Table Details</h3>
+                <div>
+                    <label for="customer-name" class="block font-medium text-sm text-gray-700">Customer Name (Required)</label>
+                    <input type="text" id="customer-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div>
+                    <label for="customer-mobile" class="block font-medium text-sm text-gray-700">Mobile Number (Optional)</label>
+                    <input type="tel" id="customer-mobile" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div>
+                    <label for="table-select" class="block font-medium text-sm text-gray-700">Assign Table (Optional)</label>
+                    <select id="table-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"></select>
+                </div>
+                <div>
+                    <label for="discount-percent" class="block font-medium text-sm text-gray-700">Discount (%)</label>
+                    <input type="number" id="discount-percent" value="0" min="0" max="100" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div class="mt-6 flex justify-end gap-4">
+                    <button type="button" id="customer-details-cancel" class="px-6 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition">Cancel</button>
+                    <button type="submit" class="px-6 py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition">Finalize Order</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="payment-method-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 text-center modal-content-anim">
+                <h3 class="text-2xl font-bold mb-4">Select Payment Method</h3>
+                <div class="mt-6 flex justify-center gap-6">
+                    <button data-method="Cash" class="payment-method-btn flex flex-col items-center gap-2 p-4 rounded-lg hover:bg-gray-100 transition">
+                        <i class="ph-fill ph-money text-5xl text-green-600"></i>
+                        <span class="font-semibold">Cash</span>
+                    </button>
+                    <button data-method="UPI" class="payment-method-btn flex flex-col items-center gap-2 p-4 rounded-lg hover:bg-gray-100 transition">
+                        <i class="ph-fill ph-qr-code text-5xl text-blue-600"></i>
+                        <span class="font-semibold">UPI</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+       
+        <div id="staff-form-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 p-4">
+            <form id="staff-form" class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 space-y-4 modal-content-anim">
+                <h3 id="staff-modal-title" class="text-2xl font-bold mb-4">Add Staff Member</h3>
+                <input type="hidden" id="staff-id">
+                <div>
+                    <label for="staff-name" class="block font-medium text-sm text-gray-700">Name</label>
+                    <input type="text" id="staff-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div>
+                    <label for="staff-role" class="block font-medium text-sm text-gray-700">Role</label>
+                    <input type="text" id="staff-role" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div>
+                    <label for="staff-shift" class="block font-medium text-sm text-gray-700">Shift</label>
+                    <input type="text" id="staff-shift" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div>
+                    <label for="staff-salary" class="block font-medium text-sm text-gray-700">Salary</label>
+                    <input type="number" id="staff-salary" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div class="mt-6 flex justify-end gap-4">
+                    <button type="button" id="staff-form-cancel" class="px-6 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition">Cancel</button>
+                    <button type="submit" class="px-6 py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition">Save</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="table-status-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-xs p-6 space-y-4 text-center modal-content-anim">
+                <h3 id="table-modal-title" class="text-2xl font-bold mb-4">Update Table Status</h3>
+                <input type="hidden" id="table-status-id">
+                <div class="flex flex-col gap-3">
+                    <button data-status="Available" class="table-status-change-btn w-full py-3 rounded-lg bg-green-500 text-white font-bold hover:bg-green-600 transition">Available</button>
+                    <button data-status="Occupied" class="table-status-change-btn w-full py-3 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600 transition">Occupied</button>
+                    <button data-status="Reserved" class="table-status-change-btn w-full py-3 rounded-lg bg-yellow-400 text-gray-800 font-bold hover:bg-yellow-500 transition">Reserved</button>
+                </div>
+                <button type="button" id="table-status-cancel" class="mt-4 w-full py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+
+    <audio id="kds-alarm" src="https://cdn.freesound.org/previews/415/415763_6142148-lq.mp3" preload="auto"></audio>
+
+<script type="module">
+    // --- GLOBAL STATE & DATA ---
+    const AppState = {
+        menu: [],
+        tables: Array.from({ length: 20 }, (_, i) => ({
+            id: i + 1,
+            name: `T${i + 1}`,
+            status: 'Available', // Available, Occupied, Reserved
+            orderId: null,
+        })),
+        inventory: [
+            { id: 1, name: 'Paneer', stock: 10, unit: 'kg', lowThreshold: 5 },
+            { id: 2, name: 'Tomato', stock: 15, unit: 'kg', lowThreshold: 5 },
+            { id: 3, name: 'Onion', stock: 15, unit: 'kg', lowThreshold: 5 },
+            { id: 4, name: 'Flour (Maida)', stock: 20, unit: 'kg', lowThreshold: 5 },
+            { id: 5, name: 'Rice', stock: 20, unit: 'kg', lowThreshold: 5 },
+            { id: 6, name: 'Potatoes', stock: 25, unit: 'kg', lowThreshold: 5 },
+            { id: 7, name: 'Lentils (Dal)', stock: 12, unit: 'kg', lowThreshold: 5 },
+            { id: 8, name: 'Cooking Oil', stock: 10, unit: 'L', lowThreshold: 5 },
+            { id: 9, name: 'Spices Mix', stock: 5, unit: 'kg', lowThreshold: 2 },
+            { id: 10, name: 'Vegetables (Mixed)', stock: 10, unit: 'kg', lowThreshold: 4 },
+            { id: 11, name: 'Bread Slices', stock: 50, unit: 'slices', lowThreshold: 20 },
+            { id: 12, name: 'Burger Buns', stock: 30, unit: 'pcs', lowThreshold: 10 },
+            { id: 13, name: 'Pasta', stock: 8, unit: 'kg', lowThreshold: 3 },
+            { id: 14, name: 'Cheese', stock: 5, unit: 'kg', lowThreshold: 2 },
+            { id: 15, name: 'Tea Leaves', stock: 2, unit: 'kg', lowThreshold: 0.5 },
+            { id: 16, name: 'Coffee Beans', stock: 3, unit: 'kg', lowThreshold: 1 },
+            { id: 17, name: 'Milk', stock: 15, unit: 'L', lowThreshold: 5 },
+            { id: 18, name: 'Sugar', stock: 10, unit: 'kg', lowThreshold: 5 },
+            { id: 19, name: 'Yogurt (Dahi)', stock: 10, unit: 'kg', lowThreshold: 3 },
+            { id: 20, name: 'Soft Drink Base', stock: 50, unit: 'L', lowThreshold: 10 },
+            { id: 21, name: 'Ice Cream Base', stock: 10, unit: 'kg', lowThreshold: 2 },
+            // New Inventory Items
+            { id: 22, name: 'Maggi Packets', stock: 100, unit: 'pcs', lowThreshold: 20 },
+            { id: 23, name: 'Momo Wrappers', stock: 200, unit: 'pcs', lowThreshold: 50 },
+            { id: 24, name: 'Soup Mix Powder', stock: 5, unit: 'kg', lowThreshold: 1 },
+            { id: 25, name: 'Mocktail Syrup', stock: 10, unit: 'L', lowThreshold: 2 },
+            { id: 26, name: 'Frappe Powder', stock: 5, unit: 'kg', lowThreshold: 1 },
+            { id: 27, name: 'Puff Pastry Sheets', stock: 50, unit: 'pcs', lowThreshold: 10 },
+            { id: 28, name: 'Salad Greens', stock: 5, unit: 'kg', lowThreshold: 1 },
+            { id: 29, name: 'Mineral Water Bottles', stock: 100, unit: 'pcs', lowThreshold: 24 },
+        ],
+        staff: [
+            { id: 1, name: 'Ramesh Kumar', role: 'Head Chef', shift: 'Morning', salary: 45000, img: 'https://placehold.co/100x100/E2E8F0/4A5568?text=RK' },
+            { id: 2, name: 'Sita Devi', role: 'Manager', shift: 'Full Day', salary: 55000, img: 'https://placehold.co/100x100/E2E8F0/4A5568?text=SD' },
+            { id: 3, name: 'Vikram Singh', role: 'Waiter', shift: 'Evening', salary: 22000, img: 'https://placehold.co/100x100/E2E8F0/4A5568?text=VS' },
+        ],
+        orders: [], // Will be loaded from localStorage
+        savedReports: {}, // Will be loaded from localStorage
+        currentOrder: [], // For the new order view
+        nextOrderId: 101,
+        nextStaffId: 4,
+        activeOrderId: null,
+        currentView: 'dashboard-view',
+        dashboardDate: getTodayDateString(), // To track the date being viewed on the dashboard
+    };
+
+    // --- NEW MOCK MENU & INVENTORY LINKING ---
+    function generateMockMenu() {
+        const menuData = {
+            "Chai & Coffee": {
+                "Masala Chai": { price: 30, ingredients: [[15, 0.02], [17, 0.1]] },
+                "Ginger Chai": { price: 35, ingredients: [[15, 0.02], [17, 0.1]] },
+                "Hot Coffee": { price: 50, ingredients: [[16, 0.02], [17, 0.15]] },
+                "Black Coffee": { price: 40, ingredients: [[16, 0.02]] },
+            },
+            "Mocktails & Frappes": {
+                "Virgin Mojito": { price: 120, ingredients: [[25, 0.1]] },
+                "Blue Lagoon": { price: 130, ingredients: [[25, 0.1]] },
+                "Cold Coffee Frappe": { price: 150, ingredients: [[26, 0.05], [17, 0.2]] },
+                "Chocolate Frappe": { price: 160, ingredients: [[26, 0.05], [17, 0.2]] },
+            },
+            "Soft Drinks & Water": {
+                "Coke / Pepsi": { price: 40, ingredients: [[20, 0.3]] },
+                "Fresh Lime Soda": { price: 60, ingredients: [] },
+                "Mineral Water Bottle": { price: 20, ingredients: [[29, 1]] },
+            },
+            "Soups": {
+                "Tomato Soup": { price: 90, ingredients: [[24, 0.05], [2, 0.1]] },
+                "Manchow Soup": { price: 100, ingredients: [[24, 0.05], [10, 0.1]] },
+                "Hot & Sour Soup": { price: 100, ingredients: [[24, 0.05], [10, 0.1]] },
+            },
+            "Starters & Fries": {
+                "Paneer Tikka": { price: 220, ingredients: [[1, 0.2], [19, 0.1]] },
+                "Veg Momos (8 pcs)": { price: 100, ingredients: [[23, 8], [10, 0.2]] },
+                "Paneer Momos (8 pcs)": { price: 120, ingredients: [[23, 8], [1, 0.1]] },
+                "French Fries": { price: 100, ingredients: [[6, 0.2]] },
+                "Peri Peri Fries": { price: 120, ingredients: [[6, 0.2], [9, 0.01]] },
+                "Veg Patties": { price: 30, ingredients: [[27, 1], [6, 0.05]] },
+            },
+            "Maggie": {
+                "Classic Masala Maggie": { price: 50, ingredients: [[22, 1]] },
+                "Vegetable Maggie": { price: 70, ingredients: [[22, 1], [10, 0.1]] },
+                "Cheese Maggie": { price: 80, ingredients: [[22, 1], [14, 0.05]] },
+            },
+            "Noodles & Pasta": {
+                "Hakka Noodles": { price: 160, ingredients: [[13, 0.1], [10, 0.15]] },
+                "Chilli Garlic Noodles": { price: 170, ingredients: [[13, 0.1], [10, 0.15]] },
+                "Alfredo Pasta": { price: 220, ingredients: [[13, 0.15], [17, 0.1], [14, 0.05]] },
+                "Arrabbiata Pasta": { price: 210, ingredients: [[13, 0.15], [2, 0.15]] },
+            },
+            "Sandwich & Toast": {
+                "Veg Grilled Sandwich": { price: 90, ingredients: [[11, 2], [10, 0.1]] },
+                "Cheese Toast": { price: 80, ingredients: [[11, 2], [14, 0.05]] },
+                "Chilli Cheese Toast": { price: 90, ingredients: [[11, 2], [14, 0.05]] },
+                "Paneer Sandwich": { price: 120, ingredients: [[11, 2], [1, 0.1]] },
+            },
+            "Pizza (8 inch)": {
+                "Margherita Pizza": { price: 210, ingredients: [[4, 0.15], [14, 0.1]] },
+                "Veggie Delight Pizza": { price: 250, ingredients: [[4, 0.15], [14, 0.1], [10, 0.1]] },
+                "Paneer Tikka Pizza": { price: 280, ingredients: [[4, 0.15], [14, 0.08], [1, 0.1]] },
+            },
+            "Rolls": {
+                "Veg Roll": { price: 80, ingredients: [[4, 0.1], [10, 0.1]] },
+                "Paneer Roll": { price: 100, ingredients: [[4, 0.1], [1, 0.1]] },
+                "Chilli Paneer Roll": { price: 110, ingredients: [[4, 0.1], [1, 0.1]] },
+            },
+            "Salads": {
+                "Green Salad": { price: 90, ingredients: [[28, 0.2]] },
+                "Russian Salad": { price: 120, ingredients: [[28, 0.15], [6, 0.1]] },
+            }
+        };
+
+        let idCounter = 1;
+        AppState.menu = []; // Clear previous menu
+        for (const category in menuData) {
+            for (const name in menuData[category]) {
+                const item = menuData[category][name];
+                AppState.menu.push({
+                    id: idCounter++,
+                    name: name,
+                    category: category,
+                    price: item.price,
+                    prepTime: Math.floor(Math.random() * 10) + 5,
+                    img: `https://placehold.co/400x300/d65d5d/FFFFFF?text=${name.replace(/\s/g, '+')}`,
+                    ingredients: item.ingredients
+                });
+            }
+        }
+    }
+   
+    // --- DOM ELEMENTS ---
+    const DOM = {
+        splashScreen: document.getElementById('splash-screen'),
+        mainApp: document.getElementById('main-app'),
+        sidebarLinks: document.querySelectorAll('.sidebar-link'),
+        viewTitle: document.getElementById('view-title'),
+        contentArea: document.getElementById('content-area'),
+        views: document.querySelectorAll('.view-content'),
+        billViewModal: document.getElementById('bill-view-modal'),
+        customerDetailsModal: document.getElementById('customer-details-modal'),
+        paymentMethodModal: document.getElementById('payment-method-modal'),
+        staffFormModal: document.getElementById('staff-form-modal'),
+        tableStatusModal: document.getElementById('table-status-modal'),
+        kdsAlarm: document.getElementById('kds-alarm'),
+    };
+
+    // --- HELPER & DATA FUNCTIONS ---
+
+    function getTodayDateString() {
+        return new Date().toISOString().split('T')[0];
+    }
+   
+    function loadData() {
+        const savedOrders = localStorage.getItem('aim-pos-orders');
+        const savedReports = localStorage.getItem('aim-pos-reports');
+        const savedNextOrderId = localStorage.getItem('aim-pos-nextOrderId');
+
+        if (savedOrders) AppState.orders = JSON.parse(savedOrders);
+        if (savedReports) AppState.savedReports = JSON.parse(savedReports);
+        if (savedNextOrderId) AppState.nextOrderId = parseInt(savedNextOrderId);
+
+        const lastAppDate = localStorage.getItem('aim-pos-last-date') || getTodayDateString();
+        const today = getTodayDateString();
+
+        if (lastAppDate !== today) {
+            const yesterdayOrders = AppState.orders.filter(o => o.date.startsWith(lastAppDate));
+            if (yesterdayOrders.length > 0) {
+                saveDailyReport(lastAppDate, false);
+            }
+            localStorage.setItem('aim-pos-last-date', today);
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem('aim-pos-orders', JSON.stringify(AppState.orders));
+        localStorage.setItem('aim-pos-reports', JSON.stringify(AppState.savedReports));
+        localStorage.setItem('aim-pos-nextOrderId', AppState.nextOrderId);
+    }
+
+    function isItemAvailable(itemId) {
+        const menuItem = AppState.menu.find(item => item.id === itemId);
+        if (!menuItem || !menuItem.ingredients) return true;
+       
+        for (const [invId, qtyNeeded] of menuItem.ingredients) {
+            const inventoryItem = AppState.inventory.find(inv => inv.id === invId);
+            if (!inventoryItem || inventoryItem.stock < qtyNeeded) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // --- RENDER FUNCTIONS ---
+    function render() {
+        const viewRenderers = {
+            'dashboard-view': renderDashboard,
+            'new-order-view': renderNewOrderView,
+            'tables-view': renderTables,
+            'kds-view': renderKDS,
+            'billing-view': renderBilling,
+            'inventory-view': renderInventory,
+            'staff-view': renderStaff,
+        };
+        if (viewRenderers[AppState.currentView]) {
+            viewRenderers[AppState.currentView]();
+        }
+        saveData();
+    }
+
+    function renderDashboard() {
+        const view = document.getElementById('dashboard-view');
+       
+        const ordersForDate = AppState.orders.filter(o => o.date.startsWith(AppState.dashboardDate));
+       
+        const dailyRevenue = ordersForDate.filter(o => o.status === 'Paid').reduce((sum, o) => sum + o.total, 0);
+        const totalOrders = ordersForDate.length;
+        const occupiedTables = AppState.tables.filter(t => t.status === 'Occupied').length;
+        const lowStockItems = AppState.inventory.filter(i => i.stock <= i.lowThreshold);
+
+        view.innerHTML = `
+            <div class="flex flex-wrap justify-between items-center mb-6 gap-4 bg-white p-4 rounded-xl shadow-md">
+                <h3 class="text-2xl font-bold">Day's Summary</h3>
+                <div class="flex items-center gap-2">
+                    <label for="date-filter" class="font-medium">Select Date:</label>
+                    <input type="date" id="date-filter" value="${AppState.dashboardDate}" class="p-2 border rounded-md focus:ring-red-500 focus:border-red-500">
+                </div>
+                <button id="save-clear-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition font-semibold flex items-center gap-2">
+                    <i class="ph-fill ph-floppy-disk"></i> Save Day's Sales & Reset
+                </button>
+            </div>
+
+            <div id="dashboard-metrics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><i class="ph-fill ph-currency-inr text-4xl text-green-500"></i><div><p class="text-gray-500">Day's Revenue</p><p class="text-3xl font-bold">₹${dailyRevenue.toFixed(2)}</p></div></div>
+                <div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><i class="ph-fill ph-list-checks text-4xl text-blue-500"></i><div><p class="text-gray-500">Total Day's Orders</p><p class="text-3xl font-bold">${totalOrders}</p></div></div>
+                <div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><i class="ph-fill ph-users-three text-4xl text-purple-500"></i><div><p class="text-gray-500">Occupied Tables</p><p class="text-3xl font-bold">${occupiedTables} / ${AppState.tables.length}</p></div></div>
+                <div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-4"><i class="ph-fill ph-warning-circle text-4xl text-red-500"></i><div><p class="text-gray-500">Stock Alerts</p><p class="text-3xl font-bold">${lowStockItems.length}</p></div></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold mb-4">Recent Orders (${new Date(AppState.dashboardDate).toLocaleDateString()})</h3>
+                    <div id="recent-orders-feed" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                        ${ordersForDate.length > 0 ? [...ordersForDate].reverse().map(order => `
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                                <div>
+                                   <p class="font-bold">Order #${order.id} (${order.customerName})</p>
+                                   <p class="text-sm text-gray-500">${new Date(order.date).toLocaleTimeString()}</p>
+                                </div>
+                                <span class="px-3 py-1 text-sm font-semibold rounded-full ${order.status === 'Paid' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">${order.status}</span>
+                            </div>
+                        `).join('') : `<p class="text-gray-500 text-center py-10">No orders for this date.</p>`}
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold mb-4">Saved Reports</h3>
+                    <div id="saved-reports-list" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                        ${Object.keys(AppState.savedReports).length > 0 ? Object.entries(AppState.savedReports).map(([date, report]) => `
+                             <div class="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                 <div>
+                                     <p class="font-semibold text-blue-800">Report: ${new Date(date).toLocaleDateString()}</p>
+                                     <p class="font-bold text-blue-800 text-sm">Total: ₹${report.totalRevenue.toFixed(2)}</p>
+                                 </div>
+                                 <button data-report-date="${date}" class="download-report-btn bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-sm transition-transform active:scale-95">Download</button>
+                             </div>
+                        `).join('') : '<p class="text-gray-500 text-center py-10">No saved reports.</p>'}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-xl font-bold mb-4">Live Table Status</h3>
+                <div id="dashboard-table-grid" class="grid grid-cols-5 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-4">
+                    ${AppState.tables.map(table => {
+                        let statusClass = '';
+                        switch(table.status) {
+                            case 'Available': statusClass = 'table-available'; break;
+                            case 'Occupied': statusClass = 'table-occupied'; break;
+                            case 'Reserved': statusClass = 'table-reserved'; break;
+                        }
+                        return `
+                        <div data-table-id="${table.id}" class="dashboard-table-card cursor-pointer p-2 rounded-lg ${statusClass} flex flex-col items-center justify-center aspect-square shadow-md transition-transform hover:scale-110">
+                            <p class="text-xl font-bold">${table.name}</p>
+                            <p class="text-xs font-semibold">${table.status}</p>
+                            ${table.orderId ? `<p class="text-xs font-bold mt-1">(#${table.orderId})</p>` : ''}
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+
+        document.getElementById('date-filter').addEventListener('change', (e) => {
+            AppState.dashboardDate = e.target.value;
+            render();
+        });
+        document.getElementById('save-clear-btn').addEventListener('click', () => saveDailyReport(AppState.dashboardDate, true));
+        document.querySelectorAll('.download-report-btn').forEach(btn => btn.addEventListener('click', handleDownloadReport));
+       
+        // Add click listener for the new dashboard table cards
+        document.querySelectorAll('.dashboard-table-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const tablesViewLink = document.querySelector('.sidebar-link[data-view="tables-view"]');
+                if (tablesViewLink) {
+                    tablesViewLink.click(); // Simulate a click on the sidebar link to switch views
+                }
+            });
+        });
+    }
+   
+    function renderNewOrderView() {
+        const view = document.getElementById('new-order-view');
+        const categories = [...new Set(AppState.menu.map(item => item.category))];
+       
+        view.innerHTML = `
+            <div class="flex h-full gap-4">
+                <div class="w-1/4 max-w-xs bg-white rounded-lg shadow-md flex flex-col flex-shrink-0">
+                    <h3 class="text-lg font-bold p-4 border-b">Categories</h3>
+                    <div id="pos-category-list" class="flex-grow overflow-y-auto p-2">
+                        ${categories.map((cat, index) => `
+                            <button class="pos-category-link w-full text-left p-3 font-medium text-sm rounded-md ${index === 0 ? 'active' : ''}" data-category="${cat}">
+                                ${cat}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="flex-1 bg-white rounded-lg shadow-md flex flex-col">
+                    <h3 class="text-lg font-bold p-4 border-b">Menu Items</h3>
+                    <div id="pos-menu-items-container" class="flex-grow p-4 overflow-y-auto">
+                        <div id="pos-menu-items-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-1/3 max-w-sm bg-white rounded-lg shadow-md flex flex-col flex-shrink-0">
+                    <h3 class="text-lg font-bold p-4 border-b">Bill Details</h3>
+                    <div id="pos-current-order-items" class="flex-grow p-4 space-y-3 overflow-y-auto" style="max-height: calc(100vh - 350px);"></div>
+                    <div id="pos-bill-summary" class="p-4 border-t space-y-2 text-md"></div>
+                </div>
+            </div>
+        `;
+
+        document.querySelectorAll('.pos-category-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                document.querySelectorAll('.pos-category-link').forEach(l => l.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                filterPosMenuByCategory(e.currentTarget.dataset.category);
+            });
+        });
+
+        filterPosMenuByCategory(categories[0]);
+        renderPosBill();
+    }
+
+    function filterPosMenuByCategory(category) {
+        const grid = document.getElementById('pos-menu-items-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        AppState.menu.filter(item => item.category === category).forEach(item => {
+            const available = isItemAvailable(item.id);
+            grid.innerHTML += `
+                <button data-item-id="${item.id}" class="pos-item-card add-to-order-btn bg-white rounded-lg shadow-md overflow-hidden relative w-full ${!available ? 'disabled' : ''}" ${!available ? 'disabled' : ''}>
+                    <img src="${item.img}" alt="${item.name}" class="w-full h-20 object-cover">
+                    <div class="p-2 text-center h-16 flex flex-col justify-center">
+                        <p class="text-xs font-semibold leading-tight" style="white-space: normal;">${item.name}</p>
+                        <p class="text-sm font-bold text-red-600 mt-1">₹${item.price.toFixed(2)}</p>
+                    </div>
+                    ${!available ? '<div class="out-of-stock-overlay"><span>Out of Stock</span></div>' : ''}
+                </button>
+            `;
+        });
+        document.querySelectorAll('.add-to-order-btn').forEach(btn => btn.addEventListener('click', handleAddItemToCurrentOrder));
+    }
+   
+    function renderPosBill() {
+        const container = document.getElementById('pos-current-order-items');
+        const summaryContainer = document.getElementById('pos-bill-summary');
+        if (!container || !summaryContainer) return;
+
+        if (AppState.currentOrder.length === 0) {
+            container.innerHTML = `<div class="text-center py-16 text-gray-400"><i class="ph-light ph-shopping-cart text-6xl"></i><p class="mt-2">Add items to start an order</p></div>`;
+        } else {
+            container.innerHTML = AppState.currentOrder.map(item => `
+                <div class="text-sm flex items-center justify-between">
+                    <div>
+                        <p class="font-semibold">${item.name}</p>
+                        <p class="text-gray-600">₹${(item.price * item.qty).toFixed(2)}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button data-item-id="${item.id}" class="decrease-qty-btn bg-gray-200 w-7 h-7 rounded-md flex items-center justify-center font-bold text-lg hover:bg-red-200 transition">-</button>
+                        <span class="font-bold w-5 text-center text-lg">${item.qty}</span>
+                        <button data-item-id="${item.id}" class="increase-qty-btn bg-gray-200 w-7 h-7 rounded-md flex items-center justify-center font-bold text-lg hover:bg-green-200 transition">+</button>
+                    </div>
+                </div>
+            `).join('<hr class="my-2">');
+            document.querySelectorAll('.increase-qty-btn, .decrease-qty-btn').forEach(btn => btn.addEventListener('click', handleUpdateQtyInOrder));
+        }
+       
+        const subtotal = AppState.currentOrder.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const discountPercent = parseFloat(document.getElementById('discount-percent')?.value) || 0;
+        const discountAmount = (subtotal * discountPercent) / 100;
+        const total = subtotal - discountAmount;
+
+        summaryContainer.innerHTML = `
+            <div class="flex justify-between font-medium"><span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span></div>
+            <div class="flex justify-between font-medium text-red-500">
+                <span>Discount</span>
+                <span>-₹${discountAmount.toFixed(2)}</span>
+            </div>
+            <div class="flex justify-between font-bold text-xl text-gray-800 border-t pt-2 mt-2"><span>Total</span><span>₹${total.toFixed(2)}</span></div>
+            <div class="grid grid-cols-2 gap-3 mt-4">
+                <button id="kot-print-btn" class="col-span-2 w-full py-3 rounded-lg bg-blue-600 text-white font-bold text-md hover:bg-blue-700 transition disabled:bg-gray-400" ${AppState.currentOrder.length === 0 ? 'disabled' : ''}>
+                    KOT & Finalize
+                </button>
+            </div>
+        `;
+        document.getElementById('kot-print-btn').addEventListener('click', () => {
+            const tableSelect = document.getElementById('table-select');
+            tableSelect.innerHTML = '<option value="">For Takeaway / Parcel</option>';
+            AppState.tables.filter(t => t.status === 'Available').forEach(t => {
+                tableSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+            });
+            DOM.customerDetailsModal.classList.add('flex');
+            DOM.customerDetailsModal.classList.remove('hidden');
+        });
+    }
+
+    function renderTables() {
+        const view = document.getElementById('tables-view');
+        view.innerHTML = `
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Table Management</h3>
+                <div class="flex items-center gap-4 text-sm font-medium">
+                    <span class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow"></div>Available</span>
+                    <span class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow"></div>Occupied</span>
+                    <span class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-yellow-400 border-2 border-white shadow"></div>Reserved</span>
+                </div>
+            </div>
+            <div id="table-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            ${AppState.tables.map(table => {
+                let statusClass = '';
+                let icon = '';
+                switch(table.status) {
+                    case 'Available': statusClass = 'table-available'; icon = '<i class="ph-fill ph-check-circle text-4xl"></i>'; break;
+                    case 'Occupied': statusClass = 'table-occupied'; icon = '<i class="ph-fill ph-bowl-food text-4xl"></i>'; break;
+                    case 'Reserved': statusClass = 'table-reserved'; icon = '<i class="ph-fill ph-clock text-4xl"></i>'; break;
+                }
+                return `
+                <div data-table-id="${table.id}" class="table-card p-4 rounded-xl ${statusClass} flex flex-col items-center justify-center aspect-square shadow-lg">
+                    <div class="flex-grow flex flex-col items-center justify-center text-center">
+                        ${icon}
+                        <p class="text-3xl font-bold mt-2">${table.name}</p>
+                        <p class="font-semibold">${table.status}</p>
+                        ${table.orderId ? `<p class="text-xs font-bold">(Order #${table.orderId})</p>` : ''}
+                    </div>
+                </div>
+                `;
+            }).join('')}
+            </div>`;
+        document.querySelectorAll('.table-card').forEach(card => card.addEventListener('click', handleTableCardClick));
+    }
+   
+    function renderKDS() {
+        const view = document.getElementById('kds-view');
+        const activeOrders = AppState.orders.filter(o => o.kdsStatus === 'New' || o.kdsStatus === 'Preparing');
+       
+        let newOrderAlert = false;
+        activeOrders.forEach(order => {
+            if (order.kdsStatus === 'New') {
+                newOrderAlert = true;
+                order.kdsStatus = 'Preparing';
+            }
+        });
+       
+        if (newOrderAlert) {
+            DOM.kdsAlarm.play().catch(e => console.error("Alarm play failed:", e));
+        }
+
+        let kdsHTML = `<h3 class="text-2xl font-bold mb-6">Kitchen Display System</h3>`;
+        if (activeOrders.length === 0) {
+            kdsHTML += `<div class="text-center py-20 text-gray-500"><i class="ph-light ph-coffee text-6xl"></i><p class="mt-4 text-xl">Kitchen is clear!</p><p>No active orders right now.</p></div>`;
+        } else {
+            kdsHTML += `<div id="kds-orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">`;
+            activeOrders.forEach(order => {
+                kdsHTML += `
+                    <div class="kds-ticket bg-white rounded-lg shadow-lg p-4 flex flex-col ${newOrderAlert && order.kdsStatus === 'Preparing' ? 'kds-new-order' : ''}">
+                        <div class="flex justify-between items-center border-b pb-2 mb-2">
+                            <h4 class="font-bold text-xl text-red-600">${order.tableName} (#${order.id})</h4>
+                            <span class="text-sm font-semibold text-orange-600">Preparing</span>
+                        </div>
+                        <ul class="flex-grow space-y-2 text-gray-700 my-2">
+                            ${order.items.map(item => `
+                                <li class="flex justify-between items-center p-2 rounded-md ${item.status === 'Served' ? 'bg-green-100 line-through' : 'bg-gray-100'}">
+                                    <div><span class="font-medium">${item.name}</span> <span class="font-bold">x ${item.qty}</span></div>
+                                    ${item.status === 'Preparing' ?  
+                                        `<button data-order-id="${order.id}" data-item-id="${item.id}" class="mark-item-done-btn text-xs bg-blue-500 text-white px-3 py-1 rounded-full font-semibold hover:bg-blue-600 transition-transform active:scale-95">Done</button>` :
+                                        item.status === 'Served' ? `<i class="ph-fill ph-check-circle text-green-600 text-xl"></i>` : ''
+                                    }
+                                </li>`).join('')}
+                        </ul>
+                        <button data-order-id="${order.id}" class="mark-served-btn mt-4 w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400" ${order.items.some(i => i.status !== 'Served') ? 'disabled' : ''}>Mark Order Served</button>
+                    </div>
+                `;
+            });
+            kdsHTML += `</div>`;
+        }
+        view.innerHTML = kdsHTML;
+       
+        document.querySelectorAll('.mark-item-done-btn').forEach(btn => btn.addEventListener('click', handleMarkItemDone));
+        document.querySelectorAll('.mark-served-btn').forEach(btn => btn.addEventListener('click', handleMarkOrderServed));
+    }
+
+    function renderBilling() {
+        const view = document.getElementById('billing-view');
+        let html = `
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Billing History</h3>
+                <input type="text" id="billing-search" placeholder="Search by Order ID or Customer Name..." class="w-1/3 px-4 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500">
+            </div>
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="p-3 text-left font-semibold">Order ID</th><th class="p-3 text-left font-semibold">Customer</th><th class="p-3 text-left font-semibold">Amount</th><th class="p-3 text-left font-semibold">Date</th><th class="p-3 text-left font-semibold">Status</th><th class="p-3 text-center font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="billing-table-body">
+            `;
+        if (AppState.orders.length === 0) {
+            html += `<tr><td colspan="6" class="text-center p-10 text-gray-500">No orders have been placed yet.</td></tr>`;
+        } else {
+            [...AppState.orders].reverse().forEach(order => {
+                const statusClass = order.status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                html += `
+                    <tr class="billing-row border-b hover:bg-gray-50 transition-colors" data-order-id="${order.id}" data-customer-name="${order.customerName.toLowerCase()}">
+                        <td class="p-3 font-medium">#${order.id}</td><td class="p-3">${order.customerName}</td><td class="p-3">₹${order.total.toFixed(2)}</td><td class="p-3">${new Date(order.date).toLocaleDateString()}</td><td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${order.status}</span></td><td class="p-3 text-center"><button class="view-bill-btn text-blue-600 hover:underline font-semibold" data-order-id="${order.id}">View Bill</button></td>
+                    </tr>`;
+            });
+        }
+        html += `</tbody></table></div>`;
+        view.innerHTML = html;
+       
+        document.getElementById('billing-search').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            document.querySelectorAll('.billing-row').forEach(row => {
+                const orderId = row.dataset.orderId;
+                const customerName = row.dataset.customerName;
+                row.style.display = (orderId.includes(searchTerm) || customerName.includes(searchTerm)) ? '' : 'none';
+            });
+        });
+
+        document.querySelectorAll('.view-bill-btn').forEach(btn => btn.addEventListener('click', (e) => {
+            const orderId = parseInt(e.currentTarget.dataset.orderId);
+            const order = AppState.orders.find(o => o.id === orderId);
+            renderBillModal(order);
+        }));
+    }
+   
+    function renderInventory() {
+        const view = document.getElementById('inventory-view');
+        view.innerHTML = `<h3 class="text-2xl font-bold mb-6">Inventory Management</h3>
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gray-200"><tr>
+                    <th class="p-3 text-left font-semibold">Item</th><th class="p-3 text-left font-semibold">Current Stock</th><th class="p-3 text-left font-semibold">Low Stock At</th><th class="p-3 text-left font-semibold">Actions</th>
+                </tr></thead><tbody>
+                ${AppState.inventory.map(item => {
+                    const isLow = item.stock <= item.lowThreshold;
+                    return `<tr class="border-b ${isLow ? 'bg-red-50' : ''}">
+                        <td class="p-3 font-medium ${isLow ? 'text-red-800' : ''}">${item.name} ${isLow ? '<span class="text-xs font-bold">(Low!)</span>' : ''}</td>
+                        <td class="p-3 font-bold ${isLow ? 'text-red-800' : ''}">${item.stock.toFixed(2)} ${item.unit}</td>
+                        <td class="p-3 text-gray-600">${item.lowThreshold} ${item.unit}</td>
+                        <td class="p-3 flex items-center gap-2">
+                            <input type="number" step="0.1" class="w-24 p-2 border rounded-md" id="stock-input-${item.id}" placeholder="Add Qty">
+                            <button data-item-id="${item.id}" class="update-stock-btn bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-transform active:scale-95">Update</button>
+                        </td>
+                        </tr>`;
+                }).join('')}
+            </tbody></table></div>`;
+        document.querySelectorAll('.update-stock-btn').forEach(btn => btn.addEventListener('click', handleUpdateStock));
+    }
+
+    function renderStaff() {
+        const view = document.getElementById('staff-view');
+        view.innerHTML = `
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Staff Management</h3>
+                <button id="add-staff-btn" class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition shadow-md hover:shadow-lg flex items-center gap-2">
+                    <i class="ph-fill ph-plus-circle text-xl"></i> Add New Staff
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${AppState.staff.map(member => `
+                    <div class="staff-card flex items-center p-4 gap-4">
+                        <img src="${member.img}" alt="${member.name}" class="w-20 h-20 rounded-full object-cover border-4 border-gray-200">
+                        <div class="flex-grow">
+                            <h4 class="text-lg font-bold">${member.name}</h4>
+                            <p class="text-red-600 font-semibold">${member.role}</p>
+                            <p class="text-sm text-gray-500">Shift: ${member.shift}</p>
+                            <p class="text-sm text-gray-500">Salary: ₹${member.salary.toLocaleString()}</p>
+                        </div>
+                        <button data-staff-id="${member.id}" class="edit-staff-btn text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 transition">
+                           <i class="ph-fill ph-pencil-simple text-2xl"></i>
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        document.getElementById('add-staff-btn').addEventListener('click', handleAddStaffClick);
+        document.querySelectorAll('.edit-staff-btn').forEach(btn => btn.addEventListener('click', handleEditStaffClick));
+    }
+
+    function renderBillModal(order) {
+        AppState.activeOrderId = order.id;
+        const content = document.getElementById('bill-modal-content');
+        const footer = document.getElementById('bill-modal-footer');
+       
+        content.innerHTML = `
+            <div class="text-center mb-6">
+                <svg class="w-12 h-12 text-red-500 mx-auto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <h2 class="text-2xl font-bold mt-2">Aim Software</h2>
+                <p class="text-gray-500 text-sm">Thank you for your order!</p>
+            </div>
+            <div class="space-y-2 text-sm text-gray-600 mb-4">
+                <div class="flex justify-between"><span>Order ID:</span><span class="font-semibold">#${order.id}</span></div>
+                <div class="flex justify-between"><span>Customer:</span><span class="font-semibold">${order.customerName}</span></div>
+                <div class="flex justify-between"><span>Table:</span><span class="font-semibold">${order.tableName}</span></div>
+                <div class="flex justify-between"><span>Date:</span><span class="font-semibold">${new Date(order.date).toLocaleString()}</span></div>
+            </div>
+            <div class="border-t-2 border-dashed border-gray-300 pt-4 mt-4">
+                <div class="space-y-2">
+                    ${order.items.map(item => `
+                    <div class="flex text-sm">
+                        <span class="flex-grow font-medium">${item.name}</span>
+                        <span class="w-12 text-center text-gray-500">x${item.qty}</span>
+                        <span class="w-20 text-right font-semibold">₹${(item.qty * item.price).toFixed(2)}</span>
+                    </div>`).join('')}
+                </div>
+            </div>
+            <div class="border-t-2 border-dashed border-gray-300 pt-4 mt-4 space-y-2">
+                 <div class="flex justify-between text-md"><span>Subtotal:</span><span>₹${order.subtotal.toFixed(2)}</span></div>
+                 <div class="flex justify-between text-md text-red-600"><span>Discount (${order.discountPercent}%):</span><span>-₹${order.discountAmount.toFixed(2)}</span></div>
+                 <div class="flex justify-between font-bold text-2xl text-black pt-2 border-t mt-2"><span>TOTAL:</span><span>₹${order.total.toFixed(2)}</span></div>
+            </div>
+             ${order.status === 'Paid' ? `<div class="text-center mt-6 p-2 rounded-md bg-green-100 text-green-700 font-bold">Paid via ${order.paymentMethod}</div>` : ''}
+        `;
+
+        footer.innerHTML = `
+            <button id="print-bill-btn" class="px-5 py-2 rounded-lg bg-gray-600 text-white font-semibold hover:bg-gray-700 transition">Download Bill</button>
+            ${order.status === 'Unpaid' ? `<button id="mark-paid-btn" class="px-5 py-3 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition shadow-lg">Mark as Paid</button>` : ''}
+        `;
+       
+        if(document.getElementById('mark-paid-btn')) document.getElementById('mark-paid-btn').addEventListener('click', handleMarkAsPaid);
+        document.getElementById('print-bill-btn').addEventListener('click', handlePrintBill);
+
+        DOM.billViewModal.classList.add('flex');
+        DOM.billViewModal.classList.remove('hidden');
+    }
+
+    // --- EVENT HANDLERS & ACTIONS ---
+    function handleAddItemToCurrentOrder(e) {
+        const itemId = parseInt(e.currentTarget.dataset.itemId);
+        const menuItem = AppState.menu.find(item => item.id === itemId);
+        const existingItem = AppState.currentOrder.find(item => item.id === itemId);
+        if (existingItem) {
+            existingItem.qty++;
+        } else {
+            AppState.currentOrder.push({ ...menuItem, qty: 1 });
+        }
+        renderPosBill();
+    }
+
+    function handleUpdateQtyInOrder(e) {
+        const itemId = parseInt(e.currentTarget.dataset.itemId);
+        const itemIndex = AppState.currentOrder.findIndex(item => item.id === itemId);
+        if (itemIndex === -1) return;
+
+        if (e.currentTarget.classList.contains('increase-qty-btn')) {
+            AppState.currentOrder[itemIndex].qty++;
+        } else {
+            AppState.currentOrder[itemIndex].qty--;
+            if (AppState.currentOrder[itemIndex].qty === 0) {
+                AppState.currentOrder.splice(itemIndex, 1);
+            }
+        }
+        renderPosBill();
+    }
+
+    function confirmBillGeneration(e) {
+        e.preventDefault();
+        const customerName = document.getElementById('customer-name').value;
+        const customerMobile = document.getElementById('customer-mobile').value;
+        const tableId = document.getElementById('table-select').value;
+        const discountPercent = parseFloat(document.getElementById('discount-percent').value) || 0;
+
+        const subtotal = AppState.currentOrder.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const discountAmount = (subtotal * discountPercent) / 100;
+        const total = subtotal - discountAmount;
+
+        const newOrder = {
+            id: AppState.nextOrderId++,
+            customerName,
+            customerMobile,
+            tableId: tableId ? parseInt(tableId) : null,
+            tableName: tableId ? AppState.tables.find(t => t.id === parseInt(tableId)).name : 'Takeaway',
+            items: AppState.currentOrder.map(item => ({...item, status: 'Preparing'})),
+            subtotal, discountPercent, discountAmount, total,
+            date: new Date().toISOString(),
+            status: 'Unpaid',
+            kdsStatus: 'New',
+            paymentMethod: null,
+        };
+       
+        newOrder.items.forEach(item => {
+            if (item.ingredients) {
+                item.ingredients.forEach(([invId, qtyUsed]) => {
+                    const inventoryItem = AppState.inventory.find(inv => inv.id === invId);
+                    if (inventoryItem) inventoryItem.stock -= (qtyUsed * item.qty);
+                });
+            }
+        });
+
+        AppState.orders.push(newOrder);
+       
+        if (newOrder.tableId) {
+            const table = AppState.tables.find(t => t.id === newOrder.tableId);
+            table.status = 'Occupied';
+            table.orderId = newOrder.id;
+        }
+
+        AppState.currentOrder = [];
+        document.getElementById('customer-details-form').reset();
+        DOM.customerDetailsModal.classList.add('hidden');
+        DOM.customerDetailsModal.classList.remove('flex');
+       
+        AppState.currentView = 'kds-view';
+        DOM.sidebarLinks.forEach(l => l.classList.remove('active'));
+        document.querySelector(`.sidebar-link[data-view="${AppState.currentView}"]`).classList.add('active');
+        DOM.viewTitle.textContent = 'KDS';
+        DOM.views.forEach(v => v.classList.add('hidden'));
+        document.getElementById(AppState.currentView).classList.remove('hidden');
+        render();
+    }
+   
+    function handleMarkItemDone(e) {
+        const orderId = parseInt(e.currentTarget.dataset.orderId);
+        const itemId = parseInt(e.currentTarget.dataset.itemId);
+        const order = AppState.orders.find(o => o.id === orderId);
+        const item = order.items.find(i => i.id === itemId);
+        if (item) item.status = 'Served';
+        renderKDS();
+    }
+   
+    function handleMarkOrderServed(e) {
+        const orderId = parseInt(e.currentTarget.dataset.orderId);
+        const order = AppState.orders.find(o => o.id === orderId);
+        if (order) order.kdsStatus = 'Served';
+        renderKDS();
+    }
+   
+    function handleMarkAsPaid() {
+        DOM.paymentMethodModal.classList.add('flex');
+        DOM.paymentMethodModal.classList.remove('hidden');
+    }
+
+    function confirmPayment(method) {
+        const order = AppState.orders.find(o => o.id === AppState.activeOrderId);
+        if(order) {
+            order.status = 'Paid';
+            order.paymentMethod = method;
+            if (order.tableId) {
+                const table = AppState.tables.find(t => t.id === order.tableId);
+                if (table) {
+                    table.status = 'Available';
+                    table.orderId = null;
+                }
+            }
+        }
+        DOM.paymentMethodModal.classList.add('hidden');
+        DOM.paymentMethodModal.classList.remove('flex');
+        DOM.billViewModal.classList.add('hidden');
+        DOM.billViewModal.classList.remove('flex');
+       
+        render();
+    }
+   
+    function handlePrintBill() {
+        const order = AppState.orders.find(o => o.id === AppState.activeOrderId);
+        if (!order) return;
+
+        let billContent = `
+        ****************************************
+                     Aim Software Invoice
+        ****************************************
+
+        Order ID: #${order.id}
+        Date: ${new Date(order.date).toLocaleString()}
+        Table: ${order.tableName}
+        Customer: ${order.customerName}
+        Mobile: ${order.customerMobile || 'N/A'}
+
+        ----------------------------------------
+        Item                           Qty      Price       Total
+        ----------------------------------------
+        `;
+
+        order.items.forEach(item => {
+            let name = item.name.padEnd(30, ' ').substring(0, 30);
+            let qty = item.qty.toString().padEnd(9, ' ');
+            let price = `₹${item.price.toFixed(2)}`.padEnd(12, ' ');
+            let total = `₹${(item.qty * item.price).toFixed(2)}`;
+            billContent += `\n${name}${qty}${price}${total}`;
+        });
+
+        billContent += `
+        ----------------------------------------
+                                  Subtotal: ₹${order.subtotal.toFixed(2)}
+                           Discount (${order.discountPercent}%): -₹${order.discountAmount.toFixed(2)}
+        ----------------------------------------
+                                     TOTAL: ₹${order.total.toFixed(2)}
+        ----------------------------------------
+
+                       Thank you for visiting!
+        `;
+
+        const blob = new Blob([billContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Aim-Bill-${order.id}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function handleUpdateStock(e) {
+        const itemId = parseInt(e.currentTarget.dataset.itemId);
+        const input = document.getElementById(`stock-input-${itemId}`);
+        const amountToAdd = parseFloat(input.value);
+        if (isNaN(amountToAdd) || amountToAdd <= 0) {
+            alert("Please enter a valid positive number for stock.");
+            return;
+        }
+
+        const item = AppState.inventory.find(i => i.id === itemId);
+        if (item) item.stock += amountToAdd;
+       
+        input.value = '';
+        render();
+    }
+
+    function handleAddStaffClick() {
+        document.getElementById('staff-form').reset();
+        document.getElementById('staff-id').value = '';
+        document.getElementById('staff-modal-title').textContent = 'Add Staff Member';
+        DOM.staffFormModal.classList.add('flex');
+        DOM.staffFormModal.classList.remove('hidden');
+    }
+
+    function handleEditStaffClick(e) {
+        const staffId = parseInt(e.currentTarget.closest('.staff-card').querySelector('.edit-staff-btn').dataset.staffId);
+        const staff = AppState.staff.find(s => s.id === staffId);
+        if (staff) {
+            document.getElementById('staff-id').value = staff.id;
+            document.getElementById('staff-name').value = staff.name;
+            document.getElementById('staff-role').value = staff.role;
+            document.getElementById('staff-shift').value = staff.shift;
+            document.getElementById('staff-salary').value = staff.salary;
+            document.getElementById('staff-modal-title').textContent = 'Edit Staff Member';
+            DOM.staffFormModal.classList.add('flex');
+            DOM.staffFormModal.classList.remove('hidden');
+        }
+    }
+
+    function handleStaffFormSubmit(e) {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('staff-id').value);
+        const name = document.getElementById('staff-name').value;
+        const role = document.getElementById('staff-role').value;
+        const shift = document.getElementById('staff-shift').value;
+        const salary = parseFloat(document.getElementById('staff-salary').value);
+
+        if (id) {
+            const staffIndex = AppState.staff.findIndex(s => s.id === id);
+            if (staffIndex > -1) {
+                AppState.staff[staffIndex] = { ...AppState.staff[staffIndex], name, role, shift, salary };
+            }
+        } else {
+            AppState.staff.push({ id: AppState.nextStaffId++, name, role, shift, salary, img: `https://placehold.co/100x100/E2E8F0/4A5568?text=${name.substring(0,2)}` });
+        }
+       
+        DOM.staffFormModal.classList.add('hidden');
+        DOM.staffFormModal.classList.remove('flex');
+        renderStaff();
+    }
+
+    function handleTableCardClick(e) {
+        const tableId = parseInt(e.currentTarget.dataset.tableId);
+        const table = AppState.tables.find(t => t.id === tableId);
+        if(table.status === 'Occupied' && AppState.orders.some(o => o.id === table.orderId && o.status === 'Unpaid')) {
+            alert(`Table ${table.name} is occupied with an active order (#${table.orderId}). Please clear the bill first.`);
+            return;
+        }
+        document.getElementById('table-status-id').value = tableId;
+        document.getElementById('table-modal-title').innerText = `Update ${table.name} Status`;
+        DOM.tableStatusModal.classList.add('flex');
+        DOM.tableStatusModal.classList.remove('hidden');
+    }
+
+    function handleTableStatusChange(e) {
+        const tableId = parseInt(document.getElementById('table-status-id').value);
+        const newStatus = e.currentTarget.dataset.status;
+        const table = AppState.tables.find(t => t.id === tableId);
+        if (table) {
+            table.status = newStatus;
+            if (newStatus === 'Available') {
+                table.orderId = null;
+            }
+        }
+        DOM.tableStatusModal.classList.add('hidden');
+        DOM.tableStatusModal.classList.remove('flex');
+        render();
+    }
+
+    function saveDailyReport(dateString, withConfirm = true) {
+        const ordersForDate = AppState.orders.filter(o => o.date.startsWith(dateString));
+
+        if (ordersForDate.length === 0) {
+            if (withConfirm) alert("No orders to save for the selected date.");
+            return;
+        }
+
+        if (withConfirm) {
+            if (!confirm(`Are you sure you want to save the report for ${new Date(dateString).toLocaleDateString()} and clear today's data? This action cannot be undone.`)) {
+                return;
+            }
+        }
+
+        const totalRevenue = ordersForDate.filter(o => o.status === 'Paid').reduce((sum, o) => sum + o.total, 0);
+        const totalOrders = ordersForDate.length;
+       
+        AppState.savedReports[dateString] = {
+            date: dateString,
+            totalRevenue,
+            totalOrders,
+            orders: [...ordersForDate]
+        };
+
+        AppState.orders = AppState.orders.filter(o => !o.date.startsWith(dateString));
+
+        if (withConfirm) alert(`Report for ${new Date(dateString).toLocaleDateString()} saved successfully.`);
+       
+        AppState.dashboardDate = getTodayDateString();
+        render();
+    }
+   
+    function handleDownloadReport(e) {
+        const reportDate = e.currentTarget.dataset.reportDate;
+        const report = AppState.savedReports[reportDate];
+        if (!report) return;
+
+        let reportContent = `
+        ****************************************
+              Sales Report - Aim Software
+        ****************************************
+
+        Report Date: ${new Date(report.date).toLocaleDateString()}
+       
+        ----------------------------------------
+        Day's Summary
+        ----------------------------------------
+        Total Revenue: ₹${report.totalRevenue.toFixed(2)}
+        Total Orders: ${report.totalOrders}
+       
+        ========================================
+        Order Details
+        ========================================
+        `;
+
+        report.orders.forEach(order => {
+            reportContent += `
+        ----------------------------------------
+        Order ID: #${order.id} (${order.status})
+        Customer: ${order.customerName}
+        Table: ${order.tableName}
+        Total: ₹${order.total.toFixed(2)}
+        Items:
+        `;
+            order.items.forEach(item => {
+                reportContent += `    - ${item.qty} x ${item.name}\n`;
+            });
+        });
+
+        reportContent += "\n****************************************\n         End of Report\n****************************************";
+
+        const blob = new Blob([reportContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Aim-Report-${reportDate}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // --- INITIALIZATION ---
+    function init() {
+        generateMockMenu();
+        loadData();
+       
+        setTimeout(() => {
+            DOM.splashScreen.style.display = 'none';
+            DOM.mainApp.classList.remove('hidden');
+            render();
+        }, 2500);
+       
+        DOM.sidebarLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const requestedView = e.currentTarget.dataset.view;
+                if(AppState.currentView === 'new-order-view' && AppState.currentOrder.length > 0 && requestedView !== 'new-order-view') {
+                    if(!confirm("You have an active order in progress. Are you sure you want to leave? The current order will be lost.")) {
+                        return;
+                    }
+                    AppState.currentOrder = [];
+                }
+                AppState.currentView = requestedView;
+                DOM.sidebarLinks.forEach(l => l.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                DOM.viewTitle.textContent = e.currentTarget.querySelector('span').textContent;
+                DOM.views.forEach(v => v.classList.add('hidden'));
+                document.getElementById(AppState.currentView).classList.remove('hidden');
+
+                if (requestedView === 'dashboard-view') {
+                    AppState.dashboardDate = getTodayDateString();
+                }
+
+                render();
+            });
+        });
+       
+        document.getElementById('customer-details-form').addEventListener('submit', confirmBillGeneration);
+        document.getElementById('customer-details-cancel').addEventListener('click', () => {
+            DOM.customerDetailsModal.classList.add('hidden');
+            DOM.customerDetailsModal.classList.remove('flex');
+        });
+
+        document.querySelectorAll('.payment-method-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => confirmPayment(e.currentTarget.dataset.method));
+        });
+       
+        document.getElementById('close-bill-modal-btn').addEventListener('click', () => {
+            DOM.billViewModal.classList.add('hidden');
+            DOM.billViewModal.classList.remove('flex');
+        });
+       
+        document.getElementById('staff-form').addEventListener('submit', handleStaffFormSubmit);
+        document.getElementById('staff-form-cancel').addEventListener('click', () => {
+            DOM.staffFormModal.classList.add('hidden');
+            DOM.staffFormModal.classList.remove('flex');
+        });
+
+        document.querySelectorAll('.table-status-change-btn').forEach(btn => btn.addEventListener('click', handleTableStatusChange));
+        document.getElementById('table-status-cancel').addEventListener('click', () => {
+            DOM.tableStatusModal.classList.add('hidden');
+            DOM.tableStatusModal.classList.remove('flex');
+        });
+
+        setInterval(() => {
+            const timeEl = document.getElementById('current-time');
+            if (timeEl) {
+                timeEl.textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            }
+        }, 1000);
+       
+        const timeEl = document.getElementById('current-time');
+        if (timeEl) {
+            timeEl.textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+    }
+
+    init();
+
+</script>
+
+</body>
+</html>
